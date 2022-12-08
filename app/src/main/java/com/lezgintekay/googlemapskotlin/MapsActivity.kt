@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -19,6 +20,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.lezgintekay.googlemapskotlin.databinding.ActivityMapsBinding
+import java.util.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -44,6 +46,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.setOnMapLongClickListener(listener)
 
         /*
         val ankara = LatLng(39.920896,32.8523106)
@@ -60,6 +63,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 val currentLocation = LatLng(p0.latitude,p0.longitude)
                 mMap.addMarker(MarkerOptions().position(currentLocation).title("You are here now"))
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation,15f))
+
+
+
             }
 
         }
@@ -100,4 +106,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
+
+        val listener = object : GoogleMap.OnMapLongClickListener {
+            override fun onMapLongClick(p0: LatLng) {
+
+                mMap.clear()
+                val geocoder = Geocoder(this@MapsActivity, Locale.getDefault())
+                if(p0 != null) {
+                    var adres = ""
+                    try {
+
+                        val adressList = geocoder.getFromLocation(p0.latitude, p0.longitude,1)
+                        if (adressList.size>0) {
+                            if(adressList.get(0).thoroughfare != null) {
+                                adres += adressList.get(0).thoroughfare
+                                if (adressList.get(0).subThoroughfare != null){
+                                    adres+= adressList.get(0).subThoroughfare
+                               }
+                            }
+                        }
+
+                    }catch (e:Exception) {
+                        e.printStackTrace()
+                    }
+                    mMap.addMarker(MarkerOptions().position(p0).title(adres))
+                }
+            }
+
+        }
 }
